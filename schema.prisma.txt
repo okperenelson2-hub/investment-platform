@@ -1,0 +1,70 @@
+// schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  phone        String?       @unique
+  passwordHash String
+  twoFactorEn  Boolean       @default(false)
+  role         Role          @default(USER)
+  balance      Float         @default(0.0)
+  createdAt    DateTime      @default(now())
+  
+  transactions Transaction[]
+  investments  Investment[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        TxType
+  amount      Float
+  status      TxStatus @default(COMPLETED)
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+enum TxType {
+  DEPOSIT_DEMO
+  WITHDRAWAL_DEMO
+  INVESTMENT
+  PROFIT_PAYOUT
+  ADMIN_ADJUSTMENT
+}
+
+enum TxStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Investment {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  amountInvested Float
+  targetProfit  Float
+  status        InvStatus @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+}
+
+enum InvStatus {
+  ACTIVE
+  MATURED
+  CANCELLED
+}
